@@ -1,0 +1,14 @@
+spring:
+  # DataSource
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:~/security-jwt
+    username: sa
+    password:
+
+  # H2
+  h2:
+    console:
+      enabled: true
+      path: /db_console
