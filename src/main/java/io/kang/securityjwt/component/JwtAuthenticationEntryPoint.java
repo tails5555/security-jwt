@@ -16,9 +16,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         log.error("Unauthorized Error Checking -> {}", authException.getMessage());
-        // ErrorCode 에 대해서 받아올 방법을 다시 확인해볼 것.
-        //ErrorCode unAuthorizationCode = (ErrorCode) request.getAttribute("unauthorization.code");
-        //request.setAttribute("response.failure.code", unAuthorizationCode.name());
-        //response.sendError(HttpServletResponse.SC_UNAUTHORIZED, unAuthorizationCode.message());
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized Error!");
+
+        // 401 은 로그인을 아예 안 한 사람. 403 은 권한이 아예 없는 사람. https://mangkyu.tistory.com/146
     }
 }

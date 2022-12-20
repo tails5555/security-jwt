@@ -2,11 +2,16 @@ package io.kang.securityjwt.config;
 
 import io.kang.securityjwt.component.JwtAuthenticationEntryPoint;
 import io.kang.securityjwt.component.JwtAuthenticationFilter;
+import io.kang.securityjwt.controller.AdminRestController;
+import io.kang.securityjwt.controller.AuthRestController;
+import io.kang.securityjwt.controller.UserRestController;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,10 +25,18 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(securedEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web
+            .ignoring()
+            .antMatchers( "/db_console/**");
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -40,10 +53,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .authorizeRequests()
-            .antMatchers()
+            .antMatchers(AuthRestController.API_URI_PREFIX + "/auth/**")
                 .permitAll()
-            .antMatchers()
-                .authenticated()
+            .antMatchers(UserRestController.API_URI_PREFIX + "/**")
+                .hasRole("USER")
+            .antMatchers(AdminRestController.API_URI_PREFIX + "/**")
+                .hasRole("ADMIN")
         .and()
             .exceptionHandling()
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
@@ -59,9 +74,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter();
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("*");
+        // setAllowCredentials(true), addOriginPattern("*") 을 동시에 사용하기 불가능할까?
+        configuration.addAllowedOriginPattern("*");
         configuration.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE"));
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
@@ -71,11 +92,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
-
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter();
     }
 
     @Bean

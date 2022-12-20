@@ -1,9 +1,12 @@
 package io.kang.securityjwt.component;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
+import io.kang.securityjwt.domain.User;
+import io.kang.securityjwt.service.UserService;
+import io.kang.securityjwt.vo.UserAuthentication;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -12,10 +15,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String JWT_TOKEN_PREFIX = "Bearer ";
+
+    @Autowired
+    private UserService userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -23,9 +28,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = getJwtFromRequest(request);
             if (!StringUtils.isEmpty(jwt) && JwtTokenProvider.validateToken(jwt)) {
                 String userId = JwtTokenProvider.getUserIdFromJwt(jwt);
-
-                // 비밀번호 내용도 같이 넣어줘야 하는게 도리 아닐까?
-                UserAuthentication authentication = new UserAuthentication(userId, null, null);
+                User user = userService.findById(userId);
+                UserAuthentication authentication = new UserAuthentication(userId, null, user.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
@@ -45,21 +49,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authentication");
+        String bearerToken = request.getHeader("Authorization");
         if (!StringUtils.isEmpty(bearerToken) && bearerToken.startsWith(JWT_TOKEN_PREFIX)) {
             return bearerToken.substring(JWT_TOKEN_PREFIX.length());
         }
         return null;
-    }
-
-    public static class UserAuthentication extends UsernamePasswordAuthenticationToken {
-        public UserAuthentication(String principal, String credentials) {
-            super(principal, credentials);
-        }
-
-        public UserAuthentication(String principal, String credentials,
-                                  List<GrantedAuthority> authorities) {
-            super(principal, credentials, authorities);
-        }
     }
 }

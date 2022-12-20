@@ -19,3 +19,4 @@ Kotlin 으로 해도 되는데, 번거롭게 Java 로 한 점은 양해 바랍�
 
 - https://velog.io/@shinmj1207/Spring-Spring-Security-JWT-%EB%A1%9C%EA%B7%B8%EC%9D%B8
 - https://www.toptal.com/spring/spring-security-tutorial
+- https://www.bezkoder.com/spring-boot-jwt-authentication/

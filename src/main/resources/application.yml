@@ -12,3 +12,10 @@ spring:
     console:
       enabled: true
       path: /db_console
+
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: update
+    generate-ddl: true
+    show-sql: true
